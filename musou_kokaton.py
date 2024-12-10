@@ -291,6 +291,11 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 0
+            if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT:
+                 if score.value >= 100:
+                    score.value -= 100  #スコア100消費して
+                    bird.state = "Hyper"
+                    bird.hyper_life = 500
             if event.type == pg.KEYDOWN and key_lst[pg.K_2] and event.key == pg.K_SPACE:   #2&spaceキー
                 neobeam = NeoBeam(bird, 2) #2個生成
                 beams.add(neobeam.gen_beams()) 
