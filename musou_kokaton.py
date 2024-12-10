@@ -251,7 +251,7 @@ class EMP(pg.sprite.Sprite):
             bomb.speed /= 2  # speedを半減させる
             bomb.state = "inactive"  # bombインスタンスのstateをinactiveにする（起爆しなくなる）
 
-    def update(self, screen: pg.Surface):
+    def update(self):
         pg.draw.rect(self.image, (255, 255, 0), self.rect)  # エフェクト
         self.time -= 0.5
         if self.time <= 0:  # 寿命を迎えたら死ぬ
@@ -344,7 +344,7 @@ def main():
         exps.update()
         exps.draw(screen)
         score.update(screen)
-        emp.update(screen)
+        emp.update()
         emp.draw(screen)
         pg.display.update()
         tmr += 1
