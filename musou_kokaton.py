@@ -223,6 +223,41 @@ class Enemy(pg.sprite.Sprite):
         self.rect.move_ip(self.vx, self.vy)
 
 
+class Shield(pg.sprite.Sprite):
+    """
+    防御壁に関するクラス
+    """
+    def __init__(self, bird: Bird, life: int):
+        """
+        防御壁を生成する
+        引数1 bird：こうかとん
+        引数2 life：防御壁の発動時間
+        """
+        super().__init__()
+        self.life = life
+        self.image = pg.Surface((20, bird.rect.height * 2))
+        self.image.set_colorkey((0, 0, 0))  # 黒を透明化
+        pg.draw.rect(self.image, (0, 0, 255), (0, 0, 20, bird.rect.height * 2))
+        vx, vy = bird.dire
+        angle = math.degrees(math.atan2(-vy, vx))
+        self.image = pg.transform.rotate(self.image, angle)
+        self.rect = self.image.get_rect()
+        self.rect.center = (
+            bird.rect.centerx + bird.rect.width * vx,
+            bird.rect.centery + bird.rect.height * vy
+            )
+
+    def update(self):
+        """
+        防御壁の寿命
+        """
+        self.life -= 1
+        if self.life <= 0:
+            self.kill()
+
+
+
+
 class Score:
     """
     打ち落とした爆弾，敵機の数をスコアとして表示するクラス
@@ -253,6 +288,7 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
+    shields = pg.sprite.Group()
 
     tmr = 0
     clock = pg.time.Clock()
@@ -263,6 +299,10 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+            if event.type == pg.KEYDOWN and event.key == pg.K_s:
+                if score.value >= 50 and not shields:
+                    shields.add(Shield(bird, 400))
+                    score.value -= 50 
         screen.blit(bg_img, [0, 0])
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
@@ -288,6 +328,8 @@ def main():
             pg.display.update()
             time.sleep(2)
             return
+        for bomb in pg.sprite.groupcollide(bombs, shields, True, False).keys():  # 防御壁と衝突した爆弾
+            exps.add(Explosion(bomb, 50))  # 爆発エフェクト
 
         bird.update(key_lst, screen)
         beams.update()
@@ -298,6 +340,8 @@ def main():
         bombs.draw(screen)
         exps.update()
         exps.draw(screen)
+        shields.update()
+        shields.draw(screen)
         score.update(screen)
         pg.display.update()
         tmr += 1
