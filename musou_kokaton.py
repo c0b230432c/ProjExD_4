@@ -332,10 +332,10 @@ def main():
         emys.draw(screen)
         bombs.update()
         bombs.draw(screen)
+        gravity.update(screen)
         exps.update()
         exps.draw(screen)
         score.update(screen)
-        gravity.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
