@@ -241,9 +241,9 @@ class EMP(pg.sprite.Sprite):
         self.surface = surface
         self.time = 10  # EMP現象の寿命
         self.image = pg.Surface((WIDTH, HEIGHT))
-        self.image.set_alpha(128)
+        self.image.set_alpha(128)  # 透明度の設定
         self.rect = self.image.get_rect()
-        pg.draw.rect(self.image, (255, 255, 0), self.rect)
+        # pg.draw.rect(self.image, (255, 255, 0), self.rect)
         for emy in self.emys:  # 全てのemyインスタンスを無効化する
             emy.interval = float("inf")  # 爆弾投下インターバルを無限に延長
             emy.image = pg.transform.laplacian(emy.image)  # emyの画像にラプシアンフィルタを掛ける
@@ -252,9 +252,9 @@ class EMP(pg.sprite.Sprite):
             bomb.state = "inactive"  # bombインスタンスのstateをinactiveにする（起爆しなくなる）
 
     def update(self, screen: pg.Surface):
-        
-        self.time -=0.5
-        if self.time <= 0:
+        pg.draw.rect(self.image, (255, 255, 0), self.rect)  # エフェクト
+        self.time -= 0.5
+        if self.time <= 0:  # 寿命を迎えたら死ぬ
             self.kill()
         
 
@@ -299,10 +299,10 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
-            if event.type == pg.KEYDOWN and event.key == pg.K_e:
-                if score.value >= 20:
-                    score.value -= 20
-                    emp.add(EMP(emys, bombs, screen))
+            if event.type == pg.KEYDOWN and event.key == pg.K_e:  # 演習-追加機能3-EMP-編集部分
+                if score.value >= 20:  # eキーが押された場合かつスコアが20以上の時
+                    score.value -= 20  # スコアを20消費する
+                    emp.add(EMP(emys, bombs, screen))  # EMPを発動する
 
         screen.blit(bg_img, [0, 0])
 
