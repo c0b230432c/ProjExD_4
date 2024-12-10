@@ -140,6 +140,7 @@ class Bomb(pg.sprite.Sprite):
         self.rect.centerx = emy.rect.centerx
         self.rect.centery = emy.rect.centery+emy.rect.height//2
         self.speed = 6
+        self.state = "active"  # 演習-追加機能3-EMP編集時に追加
 
     def update(self):
         """
@@ -149,6 +150,7 @@ class Bomb(pg.sprite.Sprite):
         self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
         if check_bound(self.rect) != (True, True):
             self.kill()
+
 
 
 class Beam(pg.sprite.Sprite):
@@ -258,6 +260,33 @@ class Enemy(pg.sprite.Sprite):
             self.state = "stop"
         self.rect.move_ip(self.vx, self.vy)
 
+class EMP(pg.sprite.Sprite):
+    """ 演習-追加技能3による追記部分
+    EMP発生と同時に存在する敵機と爆弾を無効化する
+    """
+    def __init__(self, emys, bombs, surface):
+        super().__init__()
+        self.emys = emys
+        self.bombs = bombs
+        self.surface = surface
+        self.time = 10  # EMP現象の寿命
+        self.image = pg.Surface((WIDTH, HEIGHT))
+        self.image.set_alpha(128)  # 透明度の設定
+        self.rect = self.image.get_rect()
+        # pg.draw.rect(self.image, (255, 255, 0), self.rect)
+        for emy in self.emys:  # 全てのemyインスタンスを無効化する
+            emy.interval = float("inf")  # 爆弾投下インターバルを無限に延長
+            emy.image = pg.transform.laplacian(emy.image)  # emyの画像にラプシアンフィルタを掛ける
+        for bomb in self.bombs:  # 全てのbombインスタンスを無効化する
+            bomb.speed /= 2  # speedを半減させる
+            bomb.state = "inactive"  # bombインスタンスのstateをinactiveにする（起爆しなくなる）
+
+    def update(self):
+        pg.draw.rect(self.image, (255, 255, 0), self.rect)  # エフェクト
+        self.time -= 0.5
+        if self.time <= 0:  # 寿命を迎えたら死ぬ
+            self.kill()
+        
 
 class Score:
     """
@@ -311,6 +340,7 @@ def main():
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
     gravity = pg.sprite.Group()  #Gravityグループ
+    emp = pg.sprite.Group()  # 演習-追加機能3-EMP-編集部分
 
     tmr = 0
     clock = pg.time.Clock()
@@ -356,6 +386,10 @@ def main():
                 #「r」キー押下かつスコアが200より大きいとき、重力場発動
                 score.value -= 200  #スコアを200消費
                 gravity.add(Gravity(400))
+            if event.type == pg.KEYDOWN and event.key == pg.K_e:  # 演習-追加機能3-EMP-編集部分
+                if score.value >= 20:  # eキーが押された場合かつスコアが20以上の時
+                    score.value -= 20  # スコアを20消費する
+                    emp.add(EMP(emys, bombs, screen))  # EMPを発動する
 
         screen.blit(bg_img, [0, 0])
 
@@ -377,7 +411,7 @@ def main():
             score.value += 1  # 1点アップ
 
         for bomb in pg.sprite.spritecollide(bird, bombs, True):  # こうかとんと衝突した爆弾リスト
-            if bird.state != "Hyper":
+            if bird.state != "Hyper" or bomb.state != "inactive":
                 bird.change_img(8, screen)  # こうかとん悲しみエフェクト
                 score.update(screen)
                 pg.display.update()
@@ -404,6 +438,8 @@ def main():
         exps.update()
         exps.draw(screen)
         score.update(screen)
+        emp.update()
+        emp.draw(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
